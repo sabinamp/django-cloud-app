@@ -1,26 +1,41 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 # <HINT> Import any new Models here
 from .models import Course, Lesson, Instructor, Learner, Choice, Question
+
+from django.utils.translation import ngettext
 
 
 # <HINT> Register QuestionInline and ChoiceInline classes here
 
-class ChoiceInline(admin.StackedInline):
+class ChoiceAdmin(admin.ModelAdmin):
     model: Choice
     question = ['question']
-    is_correct = ['is_correct']
-    actions = ['enable_selected', 'disable_selected']
+    actions = ['mark_as_true']
+    correct = ['is_correct']
+    display = ['id', 'question', 'is_correct']
+    list_display = ['id', 'question', 'is_correct']
 
-    def enable_selected(self):
-        self.is_correct = True
+    def mark_as_true(modeladmin, request, queryset):
+        updated = queryset.update(is_correct=True)
+        modeladmin.message_user(request, ngettext(
+            '%d was successfully marked as true.',
+            updated,
+        ) % updated, messages.SUCCESS)
 
-    def disable_selected(self):
-        self.is_correct = False
+
+class QuestionAdmin(admin.ModelAdmin):
+    lesson = ['lesson']
+    list_display = ['id', 'q_text']
+
+
+class ChoiceInline(admin.StackedInline):
+    model: Choice
+    extra = 3
 
 
 class QuestionInline(admin.StackedInline):
+    inlines = [ChoiceInline]
     model: Question
-    lesson = ['lesson']
     extra = 3
 
 
@@ -41,9 +56,8 @@ class LessonAdmin(admin.ModelAdmin):
     list_display = ['title']
 
 
-# <HINT> Register Question and Choice models here
-admin.site.register(Question)
-admin.site.register(Choice)
+admin.site.register(Choice, ChoiceAdmin)
+admin.site.register(Question, QuestionAdmin)
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Lesson, LessonAdmin)
 admin.site.register(Instructor)
