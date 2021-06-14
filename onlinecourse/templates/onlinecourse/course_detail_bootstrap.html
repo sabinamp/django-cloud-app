@@ -53,9 +53,18 @@
                     <div id="exam" class="collapse col">
                         {% for question in lesson.question_set.all %}
                             <div class="card mt-1">
-                            <div class="card-header"><h5>Question {{question.order|add:1}}: {{question.id}}</h5></div>
-                            <div class="card-body">{{question.q_text}}</div>
-                    </div>
+                            <div class="card-header"><h5> {{question.q_text}}</h5></div>
+                            <div class="card-body">
+                                <form>
+                                    <div class="form-group form-check">
+                                    {% for choice in question.choice_set.all %}
+                                    <p> <input class="form-check-input" type="checkbox"> {{ choice.choice_txt}}</p>
+                                    {% endfor %}
+                                    </div>
+                                    <button type="submit" class="btn btn-success col">Submit</button>
+                                </form>
+                            </div>
+                            </div>
                         {% endfor %}
                     </div>
                 {% endfor %}
