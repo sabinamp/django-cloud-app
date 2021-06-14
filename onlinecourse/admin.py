@@ -17,11 +17,7 @@ class ChoiceAdmin(admin.ModelAdmin):
 
     def mark_as_true(modeladmin, request, queryset):
         updated = queryset.update(is_correct=True)
-        modeladmin.message_user(request, ngettext(
-            '%d was successfully marked as true.',
-            updated,
-        ) % updated, messages.SUCCESS)
-
+       
 
 class QuestionAdmin(admin.ModelAdmin):
     lesson = ['lesson']
