@@ -56,11 +56,11 @@
                       {% for lesson in course.lesson_set.all %}
                         <div id="exam" class="collapse col">
 
-                             <form id="questionform" method="post" >
-                              {% csrf_token %}
+                             <form id="questionform" action= "{% url 'onlinecourse:submit' course.id %}" method="post" >
 
                               <div class="card mt-1">
                                  <div class="card-header"><h5>Lesson {{lesson.order|add:1}}: {{lesson.title}}</h5></div>
+                                 {% csrf_token %}
                               </div>
                               {% for question in lesson.question_set.all %}
                                 <div class="card mt-1">
