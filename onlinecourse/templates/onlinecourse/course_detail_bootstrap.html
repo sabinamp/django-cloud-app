@@ -48,26 +48,51 @@
                         <div class="card-header"><h5>Lesson {{lesson.order|add:1}}: {{lesson.title}}</h5></div>
                         <div class="card-body">{{lesson.content}}</div>
                     </div>
-                    <!-- Task: show questions and choices -->
-                    <a href="#exam" class="btn btn-info col" data-toggle="collapse">Exam</a>
-                    <div id="exam" class="collapse col">
-                        {% for question in lesson.question_set.all %}
-                            <div class="card mt-1">
-                            <div class="card-header"><h5> {{question.q_text}}</h5></div>
-                            <div class="card-body">
-                                <form>
-                                    <div class="form-group form-check">
-                                    {% for choice in question.choice_set.all %}
-                                    <p> <input class="form-check-input" type="checkbox"> {{ choice.choice_txt}}</p>
-                                    {% endfor %}
-                                    </div>
-                                    <button type="submit" class="btn btn-success col">Submit</button>
-                                </form>
-                            </div>
-                            </div>
-                        {% endfor %}
-                    </div>
+
                 {% endfor %}
+                 <a href="#exam" class="btn btn-info col" data-toggle="collapse">Exam</a>
+                 <!-- Task: show questions and choices if the user is authenticated-->
+                {% if user.is_authenticated %}
+                      {% for lesson in course.lesson_set.all %}
+                        <div id="exam" class="collapse col">
+
+                             <form id="questionform" method="post" >
+                              {% csrf_token %}
+
+                              <div class="card mt-1">
+                                 <div class="card-header"><h5>Lesson {{lesson.order|add:1}}: {{lesson.title}}</h5></div>
+                              </div>
+                              {% for question in lesson.question_set.all %}
+                                <div class="card mt-1">
+                                    <div class="card-header">
+                                        <h5> {{question.q_text}}</h5>
+                                    </div>
+                                <div class="card-body">
+                                        <div class="form-group form-check">
+                                        {% for choice in question.choice_set.all %}
+                                            <div class="form-check">
+                                                <label class="form-check-label">
+                                                <input type="checkbox" name="choice_{{choice.id}}"
+                                                   class="form-check-input" id="{{choice.id}}"
+                                                   value="{{choice.id}}">{{ choice.choice_txt }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                        </div>
+                                </div>
+                                {% endfor %}
+                                </div>
+                            {% endfor %}
+
+                            <button type="submit" class="btn btn-success col">Submit</button>
+                            </form>
+                        </div>
+                {% else %}
+                          <div class="card mt-1">
+                               <div class="card-body"><p> Login to view exam questions.</p>
+                               </div>
+                          </div>
+                {% endif %}
             </div>
 
 

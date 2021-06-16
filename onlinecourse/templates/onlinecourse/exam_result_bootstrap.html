@@ -18,6 +18,12 @@
                 <a class="btn btn-link" href="#">{{ user.first_name }}({{ user.username }})</a>
                 <a class="btn btn-link" href="{% url 'onlinecourse:logout' %}">Logout</a>
             </li>
+            <div class="card-columns-vertical">
+                 <div class="card mt-1">
+                        <div class="card-header"><h5>Exam results</h5></div>
+                        <div class="card-body">hello world</div>
+                    </div>
+            </div>
             {% else %}
             <li>
                 <form class="form-inline" action="{% url 'onlinecourse:login' %}" method="post">
