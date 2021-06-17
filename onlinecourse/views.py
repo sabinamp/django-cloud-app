@@ -14,8 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 # Create your views here.
-
-
 def registration_request(request):
     context = {}
     if request.method == 'GET':
@@ -134,8 +132,15 @@ def submit(request, course_id):
         submission = Submission.objects.create(enrollment=enrollment)
         submission.choices.set(extract_answers(request=request))
         submission.save()
-        
-    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_result', args=(course.id, submission.id,)))
+
+    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_result',
+                                        args={course.id, submission.id, }))
+
+
+# Python code t get difference of two lists
+# Using set()
+def diff(li1, li2):
+    return list(set(li1) - set(li2)) + list(set(li2) - set(li1))
 
 
 # <HINT> Create an exam result view to check if learner passed exam and show their question results and result for each question,
@@ -145,17 +150,32 @@ def submit(request, course_id):
 # For each selected choice, check if it is a correct answer or not
 # Calculate the total score
 def show_exam_result(request, course_id, submission_id):
-    context = {}
     grade = 0
     score = 2
-    best_score = 6  # best score -todo
+    best_score = 2  # best score
     course = Course.objects.get(course_id=course_id)
+    question_list = []
+    for each_lesson in course.lesson_set.all:
+        questions=each_lesson.question_set.all
+        question_list.append(questions)
+        for q in questions:
+            for c in q.choice_set.all:
+                if c.is_correct:
+                    best_score += best_score
+    context = {"course_id": course.id, "question_list": question_list, }
     submission = Submission.objects.get(submission_id=submission_id)
-    selected_choices = submission.choices
-    for selected_choice in selected_choices:
-        if selected_choice.is_correct:
+    selected_choices = submission.choices.all
+    answered_questions = []
+    for selected in selected_choices:
+        answered_questions.append(selected.question)
+        if selected.question.is_get_score(selected.id):
             score += score
 
-    grade = (score * 100) / best_score
-    context = {"grade": grade}
-    return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
+    if len(diff(set(question_list), set(answered_questions))) == 0:
+        grade = (score * 100) / best_score
+        context['grade'] = grade
+        return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
+
+    else:
+        context['error_message'] = "You didn't select a choice."
+        return render(request, 'onlinecourse:course_details', context)

@@ -50,6 +50,13 @@
         <div class="card-columns-vertical mt-1">
         <h5 class="">Exam results</h5>
             <!--HINT Display exam results-->
+            <ul>
+                {% for question in question_list.all %}
+                    {% for choice in question.choice_set.all %}
+                    <li>{{ choice.choice_txt }} -- your answer is {{ question.is_get_score(choice.id }} </li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
         </div>
     </div>
 </body>
