@@ -35,51 +35,70 @@
     </div>
 </nav>
 
-<div class="container-fluid">
+ <div class="container-fluid">
     {% if grade > 80 %}
     <div class="alert alert-success">
        <!--HINT Display passed info -->
-       <p> Congratulations, {{user.first_name}}. You have passed the exam and completed the course with score {{grade}}</p>
+       <p> Congratulations, {{user.first_name}}. You have passed the exam and completed the course with the score {{ grade|floatformat }}/100</p>
     </div>
+    {% elif grade == 0 %}
+        <div class="alert alert-danger">
+            <p> Sorry, {{user.first_name}}. </p>
+              {% if error_message %}<p><strong>{{ error_message }}</strong></p>
+                {% else %} <p>You have failed the exam with the score {{ grade|floatformat }}/100 . </p>
+              {% endif %}
+       </div>
+      <a class="btn btn-link text-danger" href="{% url 'onlinecourse:course_details' course.id %}">Re-test</a>
     {% else %}
         <div class="alert alert-danger">
             <!--HINT Display failed info --><p>Failed, sorry, {{user.first_name}}. </p>
-
-              {% if error_message %}<p><strong>{{ error_message }}</strong></p>
-
-              {% endif %}
-             <p>Your score is {{grade}}/100 . </p>
-
+               <p>You have failed the exam with the score {{ grade|floatformat }}/100 . </p>
         </div>
         <a class="btn btn-link text-danger" href="{% url 'onlinecourse:course_details' course.id %}">Re-test</a>
     {% endif %}
-        <div class="card-columns-vertical mt-1">
-            <h5 class="">Exam results</h5>
+
+
+     <div class="card-columns-vertical mt-1">
+         <h5 class="">Exam results</h5>
             <!--HINT Display exam results-->
-            <p>Your score is {{grade}}/100 . </p>
-            {% for question in question_list %}
+
+            <p>Your score is {{ grade|floatformat }}/100 . </p>
+            {% for lesson in course.lesson_set.all %}
+                {% for question in lesson.question_set.all %}
                   <div class="card mt-1">
                        <div class="card-header">
-                          <h3> Question {{ question.id }} {{ question.q_txt }}  </h3>
+                          <h3> Lesson {{ lesson.title }}  </h3>
+                           <h4> {{ question.q_text}}</h4>
                        </div>
                        <div class="card-body">
+                           <div class="text-success">
                             <p>Correct answer is:
                              {% for each in question.choice_set.all %}
-                                  {% if each.is_correct %} {{each.choice_txt}} , {% endif %}
+                                {% if each.is_correct %} {{each.choice_txt}} ,
+                                    {% if question in not_answered_questions %}
+                                     <p class="text-warning">Not selected:                                  
+                                     {{each.choice_txt}} ,
+                                    {% endif %}
+                                    </p>
+                                {% endif %}
                              {% endfor %}</p>
+                           </div>
                             {% for selected in selected_choices %}
                                 {% if selected.question.id == question.id %}
                                      <p>Your answer: {{ selected.choice_txt }}
-                                        {% if selected.is_correct %} <span>correct </span>
-                                        {% else %} <span>incorrect </span>
-                                        {% endif %} </p>
+                                        {% if selected.is_correct %} <span class="text-success">correct </span>
+                                        {% else %} <span class="text-alert">incorrect </span>
+                                        {% endif %}
+                                     </p>
                                 {% endif %}
                             {% endfor %}
                        </div>
                   </div>
-            {% endfor %}
+                {% endfor %}
 
+            {% endfor %}
         </div>
-    </div>
+
+   </div>
 </body>
 </html>

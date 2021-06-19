@@ -179,15 +179,17 @@ def show_exam_result(request, course_id, submission_id):
         for key in selected_ids_q.keys():
             if selected_ids_q[key] == each_question.id:
                 choices_question.append(key)
-        each_question.q_grade = compute_question_grade(each_question, choices_question)
+        each_question.q_grade = compute_question_grade(each_question, set(choices_question))
         score = score + each_question.q_grade
 
     if len(selected_choices) == 0:
-        context['error_message'] = "You didn't select any choice."
+        context['error_message'] = "No answer selected."
+        context['grade'] = 0.0
         return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
     else:
         grade = score / len(question_list)  # represents percentage value
-        context = {'user': current_user, 'course': course, 'question_list': question_list,
+        not_answered_questions = diff(set(question_list), set(answered_questions))
+        context = {'user': current_user, 'course': course, 'not_answered_questions': not_answered_questions,
                    'grade': grade, 'selected_choices': selected_choices}
 
         return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
@@ -196,4 +198,4 @@ def show_exam_result(request, course_id, submission_id):
 def compute_question_grade(question, selected_ids):
     all_answers = question.choice_set.filter(is_correct=True).count()
     selected_correct = question.choice_set.filter(is_correct=True, id__in=selected_ids).count()
-    return (selected_correct * 100) / all_answers
+    return (selected_correct / all_answers) * 100
