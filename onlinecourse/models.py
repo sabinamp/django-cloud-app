@@ -108,7 +108,7 @@ class Question(models.Model):
     # question text
     q_text = models.TextField()
     # question grade/mark
-    q_grade = models.FloatField(default=2.0)
+    q_grade = models.FloatField(default=0.0)
 
     def __str__(self):
         return self.question_text

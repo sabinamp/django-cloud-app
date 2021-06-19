@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views import generic
 from django.contrib.auth import login, logout, authenticate
+from collections import OrderedDict
 import logging
 
 # Get an instance of a logger
@@ -133,8 +134,7 @@ def submit(request, course_id):
         submission.choices.set(extract_answers(request=request))
         submission.save()
 
-    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_result',
-                                        args={course.id, submission.id, }))
+    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_result', args=(course.id, submission.id)))
 
 
 # Python code t get difference of two lists
@@ -150,32 +150,50 @@ def diff(li1, li2):
 # For each selected choice, check if it is a correct answer or not
 # Calculate the total score
 def show_exam_result(request, course_id, submission_id):
-    grade = 0
-    score = 2
-    best_score = 2  # best score
-    course = Course.objects.get(course_id=course_id)
-    question_list = []
-    for each_lesson in course.lesson_set.all:
-        questions=each_lesson.question_set.all
-        question_list.append(questions)
-        for q in questions:
-            for c in q.choice_set.all:
-                if c.is_correct:
-                    best_score += best_score
-    context = {"course_id": course.id, "question_list": question_list, }
-    submission = Submission.objects.get(submission_id=submission_id)
-    selected_choices = submission.choices.all
-    answered_questions = []
-    for selected in selected_choices:
-        answered_questions.append(selected.question)
-        if selected.question.is_get_score(selected.id):
-            score += score
+    current_user = request.user
+    score = 0
 
-    if len(diff(set(question_list), set(answered_questions))) == 0:
-        grade = (score * 100) / best_score
-        context['grade'] = grade
+    course = get_object_or_404(Course, pk=course_id)
+    question_list = []
+    question_list_ids = []
+    for each_lesson in course.lesson_set.all():
+        questions = each_lesson.question_set.all()
+        question_list.extend(questions)
+        for q in questions:
+            question_list_ids.append(q.id)
+
+    context = {'user': current_user, 'course': course, 'question_list': question_list, }
+
+    submission = get_object_or_404(Submission, pk=submission_id)
+    selected_choices = submission.choices.all()
+    answered_questions = []
+
+    # Order it by key-question id
+    selected_ids_q = dict()
+    for selected in selected_choices:
+        selected_ids_q[selected.id] = selected.question.id
+        answered_questions.append(selected.question)
+
+    for each_question in answered_questions:
+        choices_question = []
+        for key in selected_ids_q.keys():
+            if selected_ids_q[key] == each_question.id:
+                choices_question.append(key)
+        each_question.q_grade = compute_question_grade(each_question, choices_question)
+        score = score + each_question.q_grade
+
+    if len(selected_choices) == 0:
+        context['error_message'] = "You didn't select any choice."
+        return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
+    else:
+        grade = score / len(question_list)  # represents percentage value
+        context = {'user': current_user, 'course': course, 'question_list': question_list,
+                   'grade': grade, 'selected_choices': selected_choices}
+
         return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
 
-    else:
-        context['error_message'] = "You didn't select a choice."
-        return render(request, 'onlinecourse:course_details', context)
+
+def compute_question_grade(question, selected_ids):
+    all_answers = question.choice_set.filter(is_correct=True).count()
+    selected_correct = question.choice_set.filter(is_correct=True, id__in=selected_ids).count()
+    return (selected_correct * 100) / all_answers
