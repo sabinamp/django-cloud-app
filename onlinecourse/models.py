@@ -111,7 +111,7 @@ class Question(models.Model):
     q_grade = models.FloatField(default=0.0)
 
     def __str__(self):
-        return self.question_text
+        return self.q_text
 
     # <HINT> A sample model method to calculate if learner get the score of the question
     def is_get_score(self, selected_ids):
