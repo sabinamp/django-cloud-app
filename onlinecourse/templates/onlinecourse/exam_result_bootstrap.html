@@ -76,7 +76,7 @@
                              {% for each in question.choice_set.all %}
                                 {% if each.is_correct %} {{each.choice_txt}} ,
                                     {% if question in not_answered_questions %}
-                                     <p class="text-warning">Not selected:                                  
+                                     <p class="text-warning">Not selected:
                                      {{each.choice_txt}} ,
                                     {% endif %}
                                     </p>
@@ -87,7 +87,7 @@
                                 {% if selected.question.id == question.id %}
                                      <p>Your answer: {{ selected.choice_txt }}
                                         {% if selected.is_correct %} <span class="text-success">correct </span>
-                                        {% else %} <span class="text-alert">incorrect </span>
+                                        {% else %} <span class="text-danger">incorrect </span>
                                         {% endif %}
                                      </p>
                                 {% endif %}

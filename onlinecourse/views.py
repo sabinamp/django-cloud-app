@@ -174,13 +174,15 @@ def show_exam_result(request, course_id, submission_id):
         selected_ids_q[selected.id] = selected.question.id
         answered_questions.append(selected.question)
 
-    for each_question in answered_questions:
+    for each_question in set(answered_questions):
         choices_question = []
         for key in selected_ids_q.keys():
             if selected_ids_q[key] == each_question.id:
                 choices_question.append(key)
         each_question.q_grade = compute_question_grade(each_question, set(choices_question))
+        print("each question grade"+str(each_question.q_grade))
         score = score + each_question.q_grade
+        print("current score "+str(score))
 
     if len(selected_choices) == 0:
         context['error_message'] = "No answer selected."
@@ -196,6 +198,14 @@ def show_exam_result(request, course_id, submission_id):
 
 
 def compute_question_grade(question, selected_ids):
-    all_answers = question.choice_set.filter(is_correct=True).count()
-    selected_correct = question.choice_set.filter(is_correct=True, id__in=selected_ids).count()
-    return (selected_correct / all_answers) * 100
+    all_answers_count = question.choice_set.filter(is_correct=True).count()
+    print("all_answers_count is" + str(all_answers_count))
+    selected_correct_count = question.choice_set.filter(is_correct=True, id__in=selected_ids).count()
+    print("selected_correct_count is " + str(selected_correct_count))
+    selected_incorrect_count = question.choice_set.filter(is_correct=False, id__in=selected_ids).count()
+    if selected_correct_count <= selected_incorrect_count:
+        result = 0
+    else:
+        result = ((selected_correct_count - selected_incorrect_count) / all_answers_count) * 100
+
+    return result
